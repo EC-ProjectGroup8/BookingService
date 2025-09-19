@@ -1,30 +1,71 @@
+using API.DbContext;
+using API.Repositories;
+using API.Services;
+using Microsoft.EntityFrameworkCore;
+using Swashbuckle.AspNetCore;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+
 var builder = WebApplication.CreateBuilder(args);
 
+// Hämta connection string från Key Vault
+var keyVaultUrl = "https://<ditt-keyvault-namn>.vault.azure.net/";
+var secretName = "<din-secret-namn>";
 
+var secretClient = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
+KeyVaultSecret secret = secretClient.GetSecret(secretName);
+string connectionString = secret.Value;
+
+// Registrera DbContext med connection string från Key Vault
+builder.Services.AddDbContext<BookingDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+// Add controllers
 builder.Services.AddControllers();
-builder.Services.AddCors(o =>
+
+// Add CORS policy
+builder.Services.AddCors(options =>
 {
-    o.AddPolicy("CorsPolicy", p =>
+    options.AddPolicy("CorsPolicy", policy =>
     {
         if (builder.Environment.IsDevelopment())
-            p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
         else
-            p.WithOrigins("frontend link here")
-             .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+        {
+            policy.WithOrigins("https://din-frontend-url.com") // Byt ut mot din frontend-länk
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
     });
 });
-builder.Services.AddOpenApi();
+
+// Add Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Dependency injection
+builder.Services.AddScoped<BookingRepository>();
+builder.Services.AddScoped<BookingService>();
 
 var app = builder.Build();
 
-app.MapOpenApi();
-app.UseHttpsRedirection();
+// Enable Swagger in all environments (eller bara dev om du vill)
+app.UseSwagger();
+app.UseSwaggerUI();
 
+// Enable CORS
+app.UseCors("CorsPolicy");
+
+app.UseHttpsRedirection();
 
 //app.UseAuthentication();
 //app.UseAuthorization();
 
 app.MapControllers();
-
 
 app.Run();
