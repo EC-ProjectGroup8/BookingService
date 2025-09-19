@@ -1,10 +1,7 @@
-﻿using API.Models;
+﻿using API.DbContext;
 using API.Entities;
-using API.DbContext;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using API.Models;
+using API.Repositories.Interfaces;
 
 namespace API.Repositories
 {
@@ -19,35 +16,18 @@ namespace API.Repositories
 
         public async Task<Booking> SparaAsync(Booking booking)
         {
-            // Steg 1: Mappa från Booking (modell) till BookingEntity
             var entity = new BookingEntity
             {
                 UserId = booking.UserId,
-                WorkoutId = booking.WorkoutId,
-                StartTime = booking.StartTime
+                WorkoutId = booking.WorkoutId
             };
 
-            await _context.Bookings.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            _context.Bookings.Add(entity);
+            _context.SaveChanges();
 
-            // Steg 2: Mappa tillbaka till Booking (för att få med det nya Id:t)
+            // Mappa tillbaka det nya Id:t till modellen som vi returnerar
             booking.Id = entity.Id;
             return booking;
-        }
-
-        public async Task<IEnumerable<Booking>> HämtaFörPassAsync(int workoutId)
-        {
-            return await _context.Bookings
-                .Where(b => b.WorkoutId == workoutId)
-                // Steg 3: Mappa varje BookingEntity till en Booking-modell
-                .Select(entity => new Booking
-                {
-                    Id = entity.Id,
-                    UserId = entity.Id,
-                    WorkoutId = entity.WorkoutId,
-                    StartTime = entity.StartTime
-                })
-                .ToListAsync();
         }
     }
 }

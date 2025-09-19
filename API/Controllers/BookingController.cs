@@ -28,12 +28,14 @@ namespace API.Controllers
                 return Unauthorized("Token innehåller inget användar-ID.");
             }
 
-            // Vi förväntar oss hela bokningsobjektet tillbaka, inte bara true/false
-            var nyBokning = _bookingService.SkapaBokning(userId, bookingDto.WorkoutId);
+            // --- Korrigerad rad ---
+            // Använd await för att få ut resultatet från den asynkrona metoden
+            var nyBokning = await _bookingService.SkapaBokningAsync(userId, bookingDto.WorkoutId);
 
             if (nyBokning != null)
             {
                 // Skicka tillbaka ett 201 Created-svar med den nya bokningen
+                // Använd nameof(CreateBooking) för att bygga URL:en korrekt
                 return CreatedAtAction(nameof(CreateBooking), new { id = nyBokning.Id }, nyBokning);
             }
 

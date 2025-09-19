@@ -1,10 +1,8 @@
 ﻿using API.Models;
 using System.Threading.Tasks;
 
-namespace API.Services
+public interface IBookingService
 {
-    public interface IBookingService
-    {
-        Task<Booking> SkapaBokning(string userId, int workoutId);
-    }
+    // Metoden måste lova att den är asynkron
+    Task<Booking> SkapaBokningAsync(string userId, int workoutId);
 }
