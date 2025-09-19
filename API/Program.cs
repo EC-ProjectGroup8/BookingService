@@ -10,8 +10,10 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Hämta anslutningssträngen för databasen ---
-var connectionString = builder.Configuration.GetValue<string>("DbConnection");
+// --- Hämta anslutningssträngen för databasen (dummy fallback) ---
+var connectionString = builder.Configuration.GetValue<string>("DbConnection")
+                       ?? "Server=(localdb)\\mssqllocaldb;Database=BookingDb;Trusted_Connection=True;";
+
 builder.Services.AddDbContext<BookingDbContext>(options =>
     options.UseSqlServer(connectionString));
 
@@ -20,10 +22,10 @@ builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 
 // --- Säkerhet (Authentication & Authorization) ---
+var jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? "dummy_key_for_dev"; // fallback för test
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? "dummy_key_for_dev"; // fallback för test
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = false,
@@ -83,14 +85,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// =======================================================================
 var app = builder.Build();
 
 // --- Middleware Pipeline ---
+// Always enable Swagger for testing, även i Production
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Booking API V1");
+    c.RoutePrefix = string.Empty; // Swagger på root url
 });
 
 app.UseHttpsRedirection();
