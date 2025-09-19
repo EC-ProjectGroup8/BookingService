@@ -1,54 +1,55 @@
-﻿/*
-PSEUDOKOD:
-// Hjärnan. Innehåller all affärslogik.
-METOD SkapaBokning(userId, workoutId)
-    - Validering och regler
-    - användare = Hämta användare från databasen via UserRepository
-    - pass = Hämta pass från databasen via WorkoutRepository
-    - OM användare FINNS INTE ELLER pass FINNS INTE
-        - RETURNERA misslyckat("Användare eller pass hittades inte")
-    - Skapa ett nytt bokningsobjekt (Model/Entity)
-    - Anropa BookingRepository.Spara(nyBokning)
-    - RETURNERA lyckat
-*/
-
+﻿using API.DTOs;
 using API.Models;
 using API.Repositories;
 
 namespace API.Services
 {
-    public class BookingService
+    public class BookingService : IBookingService
     {
-        private readonly BookingRepository _bookingRepository;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly HttpClient _httpClient;
 
-        // Repositories injectas via konstruktorn
-        public BookingService(BookingRepository bookingRepository)
+        public BookingService(IBookingRepository bookingRepository, HttpClient httpClient)
         {
             _bookingRepository = bookingRepository;
+            _httpClient = httpClient;
         }
 
-        public bool SkapaBokning(int userId, int workoutId, DateTime startTime)
+        // Metoden måste vara 'async Task' eftersom HttpClient är asynkron
+        public async Task<Booking> SkapaBokning(string userIdString, int workoutId)
         {
-            // Enkel validering
-            if (userId <= 0 || workoutId <= 0)
-                return false;
+            if (!int.TryParse(userIdString, out int userId)) { return null; }
 
+            // Steg 1: Anropa ert externa WorkoutService-API
+            WorkoutDto workout;
+            try
+            {
+                // URL:en till er WorkoutService bör ligga i appsettings.json
+                workout = await _httpClient.GetFromJsonAsync<WorkoutDto>($"api/workouts/{workoutId}");
+            }
+            catch
+            {
+                // Anropet misslyckades eller passet hittades inte
+                return null;
+            }
+
+            if (workout == null) { return null; }
+
+            // Steg 2: Validera mot er lokala Booking-databas
+            var existingBookings = await _bookingRepository.HämtaFörPassAsync(workoutId);
+
+            if (existingBookings.Count() >= workout.Capacity) { return null; } // Passet är fullt
+            if (existingBookings.Any(b => b.UserId == userId)) { return null; } // Redan bokad
+
+            // Steg 3: Skapa och spara bokningen
             var booking = new Booking
             {
                 UserId = userId,
                 WorkoutId = workoutId,
-                StartTime = startTime
+                StartTime = workout.StartTime
             };
 
-            try
-            {
-                _bookingRepository.Spara(booking);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return await _bookingRepository.SparaAsync(booking);
         }
     }
 }
