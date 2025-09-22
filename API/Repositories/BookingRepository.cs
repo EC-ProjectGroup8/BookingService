@@ -2,6 +2,7 @@
 using API.Entities;
 using API.Models;
 using API.Repositories.Interfaces;
+using System.Threading.Tasks;
 
 namespace API.Repositories
 {
@@ -14,19 +15,26 @@ namespace API.Repositories
             _context = context;
         }
 
-        public async Task<Booking> SparaAsync(Booking booking)
+        /// <inheritdoc />
+        public async Task<Booking> SaveAsync(Booking booking)
         {
+            // Create a new database entity from the incoming model.
             var entity = new BookingEntity
             {
-                UserId = booking.UserId,
-                WorkoutId = booking.WorkoutId
+                UserEmail = booking.UserEmail,
+                WorkoutIdentifier = booking.WorkoutIdentifier
             };
 
+            // Stage the new entity for insertion into the database.
             _context.Bookings.Add(entity);
-            _context.SaveChanges();
 
-            // Mappa tillbaka det nya Id:t till modellen som vi returnerar
+            // Asynchronously save all changes to the database.
+            await _context.SaveChangesAsync();
+
+            // Map the database-generated Id back to the model.
             booking.Id = entity.Id;
+
+            // Return the updated model, now including the new Id.
             return booking;
         }
     }

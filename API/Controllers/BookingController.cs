@@ -1,14 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 using API.DTOs;
-using API.Services; // Här finns IBookingService
+using API.Services;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Skyddar alla metoder i denna controller
     public class BookingsController : ControllerBase
     {
         private readonly IBookingService _bookingService;
@@ -18,29 +15,33 @@ namespace API.Controllers
             _bookingService = bookingService;
         }
 
+        /// <summary>
+        /// Creates a new booking.
+        /// </summary>
+        /// <param name="bookingDto">The data transfer object containing the user's email and the workout identifier.</param>
+        /// <returns>
+        /// A 201 Created response if successful.
+        /// A 400 Bad Request response if the booking could not be created or if the email is missing.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto bookingDto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            // TODO: Add proper JWT authentication before deploying to production.
+            var userEmail = bookingDto.UserEmail;
 
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userEmail))
             {
-                return Unauthorized("Token innehåller inget användar-ID.");
+                return BadRequest("UserEmail must be provided in the request body.");
             }
 
-            // --- Korrigerad rad ---
-            // Använd await för att få ut resultatet från den asynkrona metoden
-            var nyBokning = await _bookingService.SkapaBokningAsync(userId, bookingDto.WorkoutId);
+            var newBooking = await _bookingService.CreateBookingAsync(userEmail, bookingDto.WorkoutIdentifier);
 
-            if (nyBokning != null)
+            if (newBooking != null)
             {
-                // Skicka tillbaka ett 201 Created-svar med den nya bokningen
-                // Använd nameof(CreateBooking) för att bygga URL:en korrekt
-                return CreatedAtAction(nameof(CreateBooking), new { id = nyBokning.Id }, nyBokning);
+                return CreatedAtAction(nameof(CreateBooking), new { id = newBooking.Id }, newBooking);
             }
 
-            // Om servicen returnerade null, misslyckades bokningen
-            return BadRequest("Kunde inte skapa bokningen.");
+            return BadRequest("Could not create the booking.");
         }
     }
 }

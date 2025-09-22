@@ -1,8 +1,9 @@
 using Xunit;
 using Moq;
 using API.Services;
-using API.Repositories.Interfaces; // Använd interface för repository
+using API.Repositories.Interfaces;
 using API.Models;
+using System.Threading.Tasks;
 
 namespace TestingBookingService.Services
 {
@@ -11,7 +12,6 @@ namespace TestingBookingService.Services
         private readonly Mock<IBookingRepository> _mockRepo;
         private readonly BookingService _service;
 
-        // Konstruktorn är nu mycket enklare
         public BookingServiceTests()
         {
             _mockRepo = new Mock<IBookingRepository>();
@@ -19,43 +19,29 @@ namespace TestingBookingService.Services
         }
 
         [Fact]
-        public async Task SkapaBokning_ShouldReturnBooking_WhenSuccessful()
+        public async Task CreateBookingAsync_ShouldReturnBooking_WhenCalled()
         {
             // --- Arrange ---
-            var userId = "1";
-            var workoutId = 101;
+            var userEmail = "test.user@example.com";
+            var workoutIdentifier = "strength-101"; // Changed from workoutId
 
-            // Här simulerar vi en asynkron operation
-            _mockRepo.Setup(r => r.SparaAsync(It.IsAny<Booking>()))
+            _mockRepo.Setup(r => r.SaveAsync(It.IsAny<Booking>()))
                      .ReturnsAsync((Booking b) =>
                      {
-                         b.Id = 123;
+                         b.Id = 123; // Assign a test ID
                          return b;
                      });
 
             // --- Act ---
-            // Anropa metoden med 'await'
-            var result = await _service.SkapaBokningAsync(userId, workoutId);
+            // Call the service method with the new string identifier
+            var result = await _service.CreateBookingAsync(userEmail, workoutIdentifier);
 
             // --- Assert ---
             Assert.NotNull(result);
             Assert.Equal(123, result.Id);
-            Assert.Equal(1, result.UserId);
-        }
-
-        [Fact]
-        public async Task SkapaBokning_ShouldReturnNull_WhenUserIdIsInvalid()
-        {
-            // --- Arrange ---
-            var invalidUserId = "abc";
-            var workoutId = 101;
-
-            // --- Act ---
-            // Använd await för att vänta på det faktiska resultatet
-            var result = await _service.SkapaBokningAsync(invalidUserId, workoutId);
-
-            // --- Assert ---
-            Assert.Null(result);
+            // Verify that the correct string properties were set
+            Assert.Equal(userEmail, result.UserEmail);
+            Assert.Equal(workoutIdentifier, result.WorkoutIdentifier);
         }
     }
 }

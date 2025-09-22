@@ -5,11 +5,16 @@ using API.Entities;
 using API.DbContext;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Threading.Tasks; // Added for async operations
 
 namespace TestingBookingService.Repositories
 {
     public class BookingRepositoryTests
     {
+        /// <summary>
+        /// Helper method to create a fresh in-memory database for each test.
+        /// Using a new GUID for the database name ensures that tests are isolated.
+        /// </summary>
         private BookingDbContext GetDbContext()
         {
             var options = new DbContextOptionsBuilder<BookingDbContext>()
@@ -21,31 +26,34 @@ namespace TestingBookingService.Repositories
         }
 
         [Fact]
-        // Borta: async Task
-        public async Task Spara_ShouldAddBookingToDatabase()
+        public async Task SaveAsync_ShouldAddBookingToDatabase()
         {
             // --- Arrange ---
-            using var context = GetDbContext();
+            await using var context = GetDbContext();
             var repository = new BookingRepository(context);
 
+            // Create the booking model with the new string properties.
             var bookingModel = new Booking
             {
-                UserId = 1,
-                WorkoutId = 101
-                // Borta: StartTime
+                UserEmail = "test.user@example.com",
+                WorkoutIdentifier = "strength-101"
             };
 
             // --- Act ---
-            await repository.SparaAsync(bookingModel);
+            // Call the method under test.
+            await repository.SaveAsync(bookingModel);
 
             // --- Assert ---
-            var savedEntity = context.Bookings.FirstOrDefault(b => b.WorkoutId == 101);
+            // Query the database using the new string identifier to verify the entity was saved.
+            var savedEntity = await context.Bookings.FirstOrDefaultAsync(b => b.WorkoutIdentifier == "strength-101");
 
+            // Check that an entity was found.
             Assert.NotNull(savedEntity);
-            Assert.Equal(1, savedEntity.UserId);
+            // Verify that the data was saved correctly.
+            Assert.Equal("test.user@example.com", savedEntity.UserEmail);
         }
 
-        // Vi tar bort testet för HämtaFörPassAsync eftersom den metoden inte
-        // längre behövs av vår nya, enklare BookingService.
+        // The test for GetByWorkoutAsync (HämtaFörPassAsync) has been removed,
+        // as the method is no longer needed by the simplified BookingService.
     }
 }

@@ -1,6 +1,6 @@
 ﻿using API.Models;
-using API.Repositories;
 using API.Repositories.Interfaces;
+using System.Threading.Tasks;
 
 namespace API.Services
 {
@@ -8,34 +8,24 @@ namespace API.Services
     {
         private readonly IBookingRepository _bookingRepository;
 
-        // Borta: HttpClient
         public BookingService(IBookingRepository bookingRepository)
         {
             _bookingRepository = bookingRepository;
         }
 
-        public async Task<Booking> SkapaBokningAsync(string userIdString, int workoutId)
+        /// <inheritdoc />
+        public async Task<Booking> CreateBookingAsync(string userEmail, string workoutIdentifier)
         {
-            // Konvertera userId från string (token) till int
-            if (!int.TryParse(userIdString, out int userId))
-            {
-                return null;
-            }
-
-            // Notera: Vi kan inte längre validera mot kapacitet eller dubbelbokningar
-            // eftersom denna service inte har den informationen.
-
-            // Skapa bokningsobjektet
+            // Create a new booking model object.
             var booking = new Booking
             {
-                UserId = userId,
-                WorkoutId = workoutId
-                // Vi har ingen StartTime att sätta här längre
+                // Mapping over to model (items can be added here from other places in other API's)
+                UserEmail = userEmail,
+                WorkoutIdentifier = workoutIdentifier
             };
 
-            // Spara och returnera
-            return await _bookingRepository.SparaAsync(booking);
-
+            // Call the repository to save the new booking and return the result.
+            return await _bookingRepository.SaveAsync(booking);
         }
     }
 }
