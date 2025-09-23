@@ -29,11 +29,6 @@ The request body must be a JSON object with the following properties:
   "WorkoutIdentifier": "strength-class-101"
 }
 
-## Successful Response (201 Created)
+## Successful Response (201 Created) + (200 That it connected to the API)
 ### If the booking is successful, the API returns the created booking object.
 
-{
-  "id": 123,
-  "userEmail": "test.user@example.com",
-  "workoutIdentifier": "strength-class-101"
-}
