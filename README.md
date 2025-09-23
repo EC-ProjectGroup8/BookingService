@@ -30,5 +30,5 @@ The request body must be a JSON object with the following properties:
 }
 
 ## Successful Response (201 Created) + (200 That it connected to the API)
-### If the booking is successful, the API returns the created booking object.
+
 
