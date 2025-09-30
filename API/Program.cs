@@ -34,6 +34,13 @@ builder.Services.AddDbContext<BookingDbContext>(options =>
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 
+//------- CALL TO EXTERNAL APIS -----
+builder.Services.AddHttpClient("WorkoutAPI", client =>
+{
+    client.BaseAddress = new Uri("https://workout-api-h8aae7hfcaghgvdb.swedencentral-01.azurewebsites.net/");
+});
+
+
 // ----- API Services -----
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>

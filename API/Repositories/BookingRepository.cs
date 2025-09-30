@@ -1,7 +1,9 @@
 ﻿using API.DbContext;
+using API.DTOs;
 using API.Entities;
 using API.Models;
 using API.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
 namespace API.Repositories
@@ -36,6 +38,20 @@ namespace API.Repositories
 
             // Return the updated model, now including the new Id.
             return booking;
+        }
+
+        public async Task<IEnumerable<WorkoutIdDto>> GetMyBookingsAsync(string email)
+        {
+            var bookings = await _context.Bookings
+                .Where(b => b.UserEmail == email)
+                .Select(b => new WorkoutIdDto
+                {
+                    Id = b.Id,
+                    UserEmail = b.UserEmail,
+                    WorkoutIdentifier = b.WorkoutIdentifier
+                })
+                .ToListAsync();
+            return bookings;
         }
     }
 }
