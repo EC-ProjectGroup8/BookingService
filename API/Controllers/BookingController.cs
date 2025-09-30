@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using API.DTOs;
 using API.Services;
+using System.Text.RegularExpressions;
 
 namespace API.Controllers
 {
@@ -42,6 +43,15 @@ namespace API.Controllers
             }
 
             return BadRequest("Could not create the booking.");
+        }
+
+        [HttpGet("GetMyBookings/{email}")]
+        public async Task<IActionResult> GetMyBookings(string email)
+        {
+            if(string.IsNullOrEmpty(email)) return BadRequest("Email must be provided.");
+            if(!Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")) return BadRequest("Invalid email format.");
+            var bookings = await _bookingService.GetMyBookingsAsync(email);
+            return Ok(bookings);
         }
     }
 }

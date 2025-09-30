@@ -1,4 +1,5 @@
-﻿using API.Models;
+﻿using API.DTOs;
+using API.Models;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -16,4 +17,5 @@ public interface IBookingService
     /// The task result contains the created booking object.
     /// </returns>
     Task<Booking> CreateBookingAsync(string userEmail, string workoutIdentifier);
+    Task<IEnumerable<BookingDetailsDto>> GetMyBookingsAsync(string email); 
 }
