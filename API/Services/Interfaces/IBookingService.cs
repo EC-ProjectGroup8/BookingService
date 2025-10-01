@@ -17,5 +17,12 @@ public interface IBookingService
     /// The task result contains the created booking object.
     /// </returns>
     Task<Booking> CreateBookingAsync(string userEmail, string workoutIdentifier);
-    Task<IEnumerable<BookingDetailsDto>> GetMyBookingsAsync(string email); 
+    Task<IEnumerable<BookingDetailsDto>> GetMyBookingsAsync(string email);
+    /// <summary>
+    /// Deletes a booking for a specific user and workout.
+    /// </summary>
+    /// <param name="userEmail">The email of the user whose booking is to be deleted.</param>
+    /// <param name="workoutIdentifier">The string identifier of the workout to unbook.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task DeleteAsync(string userEmail, string workoutIdentifier);
 }

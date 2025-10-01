@@ -52,5 +52,21 @@ namespace API.Services
             }
             return result;
         }
+
+        /// <inheritdoc />
+        public async Task DeleteAsync(string userEmail, string workoutIdentifier)
+        {
+            // Call the repository to delete the booking using the provided identifiers.
+            // The repository will return true if a booking was deleted, otherwise false.
+            var wasDeleted = await _bookingRepository.DeleteBookingAsync(userEmail, workoutIdentifier);
+
+            // Check the boolean result from the repository.
+            if (!wasDeleted)
+            {
+                // If false, it means no matching booking was found for that user and workout.
+                // We throw an exception to inform the caller (e.g., the API Controller) that the resource does not exist.
+                throw new KeyNotFoundException("Booking not found or you do not have permission to delete it.");
+            }
+        }
     }
 }
