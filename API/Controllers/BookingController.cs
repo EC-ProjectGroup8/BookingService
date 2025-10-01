@@ -53,5 +53,52 @@ namespace API.Controllers
             var bookings = await _bookingService.GetMyBookingsAsync(email);
             return Ok(bookings);
         }
+
+        /// <summary>
+        /// Deletes a specific booking.
+        /// </summary>
+        /// <param name="userEmail">The email of the user who owns the booking.</param>
+        /// <param name="workoutIdentifier">The identifier of the workout to unbook.</param>
+        /// <returns>
+        /// A 204 No Content response if the deletion was successful.
+        /// A 404 Not Found response if the booking does not exist.
+        /// A 400 Bad Request response for invalid input.
+        /// </returns>
+        [HttpDelete("{userEmail}/{workoutIdentifier}")]
+        public async Task<IActionResult> DeleteBooking(string userEmail, string workoutIdentifier)
+        {
+            // 1. Input Validation
+            if (string.IsNullOrEmpty(userEmail) || string.IsNullOrEmpty(workoutIdentifier))
+            {
+                return BadRequest("User email and workout identifier must be provided.");
+            }
+            if (!Regex.IsMatch(userEmail, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
+            {
+                return BadRequest("Invalid email format.");
+            }
+
+            try
+            {
+                // 2. Call the service layer to perform the deletion
+                await _bookingService.DeleteAsync(userEmail, workoutIdentifier);
+
+                // 3. Return success response
+                // HTTP 204 No Content is the standard response for a successful DELETE action
+                // where no response body is needed.
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                // 4. Handle the case where the booking was not found
+                // This exception is thrown by our BookingService, and we translate it to a 404 Not Found.
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // 5. Handle any other unexpected errors
+                // Log the exception 'ex' here for debugging
+                return StatusCode(500, "An unexpected error occurred while trying to delete the booking.");
+            }
+        }
     }
 }

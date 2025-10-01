@@ -4,8 +4,7 @@ using API.Models;
 using API.Entities;
 using API.DbContext;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks; // Added for async operations
+using System.Threading.Tasks;
 
 namespace TestingBookingService.Repositories
 {
@@ -13,7 +12,6 @@ namespace TestingBookingService.Repositories
     {
         /// <summary>
         /// Helper method to create a fresh in-memory database for each test.
-        /// Using a new GUID for the database name ensures that tests are isolated.
         /// </summary>
         private BookingDbContext GetDbContext()
         {
@@ -31,8 +29,6 @@ namespace TestingBookingService.Repositories
             // --- Arrange ---
             await using var context = GetDbContext();
             var repository = new BookingRepository(context);
-
-            // Create the booking model with the new string properties.
             var bookingModel = new Booking
             {
                 UserEmail = "test.user@example.com",
@@ -40,20 +36,64 @@ namespace TestingBookingService.Repositories
             };
 
             // --- Act ---
-            // Call the method under test.
             await repository.SaveAsync(bookingModel);
 
             // --- Assert ---
-            // Query the database using the new string identifier to verify the entity was saved.
             var savedEntity = await context.Bookings.FirstOrDefaultAsync(b => b.WorkoutIdentifier == "strength-101");
-
-            // Check that an entity was found.
             Assert.NotNull(savedEntity);
-            // Verify that the data was saved correctly.
             Assert.Equal("test.user@example.com", savedEntity.UserEmail);
         }
 
-        // The test for GetByWorkoutAsync (HämtaFörPassAsync) has been removed,
-        // as the method is no longer needed by the simplified BookingService.
+        // --- NYA TESTER FÖR DELETEBOOKINGASYNC ---
+
+        [Fact]
+        public async Task DeleteBookingAsync_ShouldReturnTrueAndRemoveBooking_WhenBookingExists()
+        {
+            // --- Arrange ---
+            // Get a fresh database and repository for this test
+            await using var context = GetDbContext();
+            var repository = new BookingRepository(context);
+
+            // Add a booking entity to the database so we have something to delete
+            var bookingEntity = new BookingEntity { UserEmail = "delete.me@example.com", WorkoutIdentifier = "workout-to-delete" };
+            context.Bookings.Add(bookingEntity);
+            await context.SaveChangesAsync();
+
+            // Verify it was added correctly before we act
+            Assert.Equal(1, await context.Bookings.CountAsync());
+
+            // --- Act ---
+            // Call the method under test with the correct identifiers
+            var result = await repository.DeleteBookingAsync("delete.me@example.com", "workout-to-delete");
+
+            // --- Assert ---
+            // The method should return true indicating success
+            Assert.True(result);
+            // The booking should no longer be in the database
+            Assert.Equal(0, await context.Bookings.CountAsync());
+        }
+
+        [Fact]
+        public async Task DeleteBookingAsync_ShouldReturnFalse_WhenBookingDoesNotExist()
+        {
+            // --- Arrange ---
+            await using var context = GetDbContext();
+            var repository = new BookingRepository(context);
+
+            // (Optional) Add a different booking to ensure we don't get a false positive from an empty DB
+            var otherBooking = new BookingEntity { UserEmail = "other.user@example.com", WorkoutIdentifier = "other-workout" };
+            context.Bookings.Add(otherBooking);
+            await context.SaveChangesAsync();
+
+            // --- Act ---
+            // Attempt to delete a booking that does not exist
+            var result = await repository.DeleteBookingAsync("non.existent@example.com", "non-existent-workout");
+
+            // --- Assert ---
+            // The method should return false indicating failure
+            Assert.False(result);
+            // The number of items in the database should be unchanged
+            Assert.Equal(1, await context.Bookings.CountAsync());
+        }
     }
 }
