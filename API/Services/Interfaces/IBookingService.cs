@@ -25,4 +25,12 @@ public interface IBookingService
     /// <param name="workoutIdentifier">The string identifier of the workout to unbook.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     Task DeleteAsync(string userEmail, string workoutIdentifier);
+
+    /// <summary>
+    /// Retrieves raw booking records directly from this service's database (Repository), 
+    /// containing the WorkoutIdentifier necessary for further processing or aggregation.
+    /// </summary>
+    /// <param name="email">The email of the user whose booking identifiers are to be retrieved.</param>
+    /// <returns>A task that represents the asynchronous operation, containing a collection of WorkoutIdDto.</returns>
+    Task<IEnumerable<WorkoutIdDto>> ReturnMyBookingsFromThisAPI(string email);
 }

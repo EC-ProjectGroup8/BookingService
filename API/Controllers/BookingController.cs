@@ -100,5 +100,21 @@ namespace API.Controllers
                 return StatusCode(500, "An unexpected error occurred while trying to delete the booking.");
             }
         }
+        /// <summary>
+        /// Retrieves raw booking identifiers directly from this service's database, 
+        /// intended for internal use or troubleshooting, not aggregation.
+        /// </summary>
+        /// <param name="email">The email of the user whose bookings are to be retrieved.</param>
+        /// <returns>A 200 OK response with a list of WorkoutIdDto objects.</returns>
+        [HttpGet("GetRawBookings/{email}")]
+        public async Task<IActionResult> GetRawBookings(string email)
+        {
+            if (string.IsNullOrEmpty(email)) return BadRequest("Email must be provided.");
+            if (!Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")) return BadRequest("Invalid email format.");
+
+            // Anropar den nya metoden som hämtar data internt.
+            var bookings = await _bookingService.ReturnMyBookingsFromThisAPI(email);
+            return Ok(bookings);
+        }
     }
 }

@@ -68,5 +68,14 @@ namespace API.Services
                 throw new KeyNotFoundException("Booking not found or you do not have permission to delete it.");
             }
         }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<WorkoutIdDto>> ReturnMyBookingsFromThisAPI(string email)
+        {
+            // Denna metod är den rena interna vägen: den hämtar WorkoutIdDto direkt från databasen.
+            // Denna metod ska användas för att mata det nya aggregeringsflödet.
+            return await _bookingRepository.GetMyBookingsAsync(email);
+        }
+
     }
 }

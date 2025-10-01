@@ -25,5 +25,7 @@ namespace API.Repositories.Interfaces
         /// <param name="workoutIdentifier">The string identifier of the workout to unbook.</param>
         /// <returns>A task that represents the asynchronous operation, containing true if a booking was found and deleted; otherwise, false.</returns>
         Task<bool> DeleteBookingAsync(string userEmail, string workoutIdentifier);
+
+ 
     }
 }
