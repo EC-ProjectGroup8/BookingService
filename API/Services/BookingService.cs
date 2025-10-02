@@ -33,7 +33,7 @@ namespace API.Services
         }
 
 
-        public async Task<IEnumerable<BookingDetailsDto>> GetMyBookingsAsync(string email)
+        public async Task<IEnumerable<BookingDetailsDto>> GetMyBookingsMultiFetchAsync(string email)
         {
             var result = new List<BookingDetailsDto>();
 
@@ -53,6 +53,30 @@ namespace API.Services
             return result;
         }
 
+        public async Task<IEnumerable<BookingDetailsDto>> GetMyBookingsDualFetchAsync(string email)
+        {
+            var result = new List<BookingDetailsDto>();
+            var bookings = await _bookingRepository.GetMyBookingsAsync(email);
+            var workoutIds = bookings.Select(b => b.WorkoutIdentifier).ToList();
+
+            if (!workoutIds.Any()) return result;
+
+            var idsParam = string.Join(",", workoutIds);
+
+            var client = _httpClientFactory.CreateClient("WorkoutAPI");
+            var workoutData = await client.GetFromJsonAsync<IEnumerable<BookingDetailsDto>>($"api/Workout/batch?ids={idsParam}");
+            return workoutData ?? Enumerable.Empty<BookingDetailsDto>();
+
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<WorkoutIdDto>> ReturnMyBookingsFromThisAPI(string email)
+        {
+            // Denna metod är den rena interna vägen: den hämtar WorkoutIdDto direkt från databasen.
+            // Denna metod ska användas för att mata det nya aggregeringsflödet.
+            return await _bookingRepository.GetMyBookingsAsync(email);
+        }
+
         /// <inheritdoc />
         public async Task DeleteAsync(string userEmail, string workoutIdentifier)
         {
@@ -69,13 +93,6 @@ namespace API.Services
             }
         }
 
-        /// <inheritdoc />
-        public async Task<IEnumerable<WorkoutIdDto>> ReturnMyBookingsFromThisAPI(string email)
-        {
-            // Denna metod är den rena interna vägen: den hämtar WorkoutIdDto direkt från databasen.
-            // Denna metod ska användas för att mata det nya aggregeringsflödet.
-            return await _bookingRepository.GetMyBookingsAsync(email);
-        }
 
     }
 }

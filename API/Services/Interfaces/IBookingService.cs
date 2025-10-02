@@ -17,7 +17,7 @@ public interface IBookingService
     /// The task result contains the created booking object.
     /// </returns>
     Task<Booking> CreateBookingAsync(string userEmail, string workoutIdentifier);
-    Task<IEnumerable<BookingDetailsDto>> GetMyBookingsAsync(string email);
+    Task<IEnumerable<BookingDetailsDto>> GetMyBookingsMultiFetchAsync(string email);
     /// <summary>
     /// Deletes a booking for a specific user and workout.
     /// </summary>
@@ -33,4 +33,5 @@ public interface IBookingService
     /// <param name="email">The email of the user whose booking identifiers are to be retrieved.</param>
     /// <returns>A task that represents the asynchronous operation, containing a collection of WorkoutIdDto.</returns>
     Task<IEnumerable<WorkoutIdDto>> ReturnMyBookingsFromThisAPI(string email);
+    Task<IEnumerable<BookingDetailsDto>> GetMyBookingsDualFetchAsync(string email);
 }
