@@ -50,9 +50,10 @@ namespace API.Controllers
         {
             if(string.IsNullOrEmpty(email)) return BadRequest("Email must be provided.");
             if(!Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")) return BadRequest("Invalid email format.");
-            var bookings = await _bookingService.GetMyBookingsAsync(email);
+            var bookings = await _bookingService.GetMyBookingsDualFetchAsync(email);
             return Ok(bookings);
         }
+
 
         /// <summary>
         /// Deletes a specific booking.
